@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator QR Code & Link Review</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 md:p-8 flex justify-center items-center font-sans">
+
+    <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-lg w-full">
+        <h1 class="text-2xl font-bold text-gray-800 text-center mb-2">Review Link & QR Generator</h1>
+        <p class="text-xs text-gray-500 text-center mb-6">Dashboard Khusus Penjual Kartu Google Review</p>
+
+        <form id="qrForm" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nama Toko / Cafe</label>
+                <input type="text" id="tokoInput" placeholder="Contoh: Cafe Kopi Asik" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" required>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nomor WhatsApp Owner</label>
+                <input type="text" id="waInput" placeholder="Contoh: 628123456789" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" required>
+                <span class="text-[10px] text-gray-400">*Gunakan awalan 62 (tanpa angka 0 atau tanda +)</span>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Link Google Review Klien</label>
+                <input type="url" id="reviewInput" placeholder="https://g.page/r/..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" required>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 text-sm">
+                Generate Link & QR Code
+            </button>
+        </form>
+
+        <!-- Hasil Output -->
+        <div id="outputSection" class="hidden mt-8 border-t pt-6 text-center">
+            <h2 class="text-sm font-bold text-gray-700 mb-2">Hasil Link Utuh Kartu NFC:</h2>
+            <div class="flex items-center gap-2 mb-4">
+                <input type="text" id="finalUrl" readonly class="w-full p-2 text-xs bg-gray-50 border rounded text-gray-600 focus:outline-none">
+                <button onclick="copyUrl()" class="bg-gray-800 text-white text-xs px-3 py-2 rounded font-semibold hover:bg-gray-900">Salin</button>
+            </div>
+
+            <h2 class="text-sm font-bold text-gray-700 mb-2">QR Code Siap Cetak:</h2>
+            <div id="qrcode" class="flex justify-center p-4 bg-white border rounded-lg shadow-inner inline-block mb-4"></div>
+            
+            <div>
+                <button onclick="downloadQR()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-4 rounded-lg shadow">
+                    Download Gambar QR Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Otomatis mengambil domain tempat file ini dihosting
+        const baseUrl = window.location.origin + '/';
+
+        document.getElementById('qrForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const toko = encodeURIComponent(document.getElementById('tokoInput').value.trim());
+            const wa = document.getElementById('waInput').value.trim().replace(/[^0-9]/g, '');
+            const reviewRaw = document.getElementById('reviewInput').value.trim();
+            const reviewEncoded = encodeURIComponent(reviewRaw);
+
+            // Merangkai Link Utuh
+            const fullLink = `${baseUrl}?toko=${toko}&wa=${wa}&review=${reviewEncoded}`;
+
+            // Tampilkan Link
+            document.getElementById('finalUrl').value = fullLink;
+
+            // Generate QR Code
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: fullLink,
+                width: 180,
+                height: 180,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('outputSection').classList.remove('hidden');
+        });
+
+        function copyUrl() {
+            const copyText = document.getElementById("finalUrl");
+            copyText.select();
+            document.execCommand("copy");
+            alert("Link berhasil disalin! Siap dimasukkan ke aplikasi NFC Tools.");
+        }
+
+        function downloadQR() {
+            const img = document.querySelector('#qrcode img');
+            if (img) {
+                const link = document.createElement('a');
+                link.download = 'QR-Code-Klien.png';
+                link.href = img.src;
+                link.click();
+            }
+        }
+    </script>
+</body>
+</html>
